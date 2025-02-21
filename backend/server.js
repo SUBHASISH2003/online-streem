@@ -1,5 +1,7 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import cors from "cors";
+
 import app from './app.js';
 import connectDB from './config/db.js';
 import 'dotenv/config';
@@ -14,6 +16,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
   },
 });
+app.use(cors());
 
 // Socket.IO Logic
 io.on('connection', (socket) => {
