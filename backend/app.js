@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.route.js';
-import roomRoutes from './routes/room.route.js';
+import roomRoutes from './routes/metting.route.js';
 
 const app = express();
 

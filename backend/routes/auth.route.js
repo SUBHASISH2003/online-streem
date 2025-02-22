@@ -4,8 +4,8 @@ import auth from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/verify-email', verifyEmail);
+router.post('/register', register);  //done
+router.post('/verify-email', verifyEmail);  //done
 router.post('/login', login);
 router.post('/google', googleLogin);
 router.post('/forgot-password', forgotPassword);
