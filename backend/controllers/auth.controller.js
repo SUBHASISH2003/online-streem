@@ -7,18 +7,18 @@ import { sendEmail } from '../utils/email.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Generate OTP helper (not exported as it’s internal)
 const generateOtp = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  return Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
 };
+
 
 export const register = async (req, res) => {
   try {
     const { email, password, firstName, lastName } = req.body;
 
     // Input validation
-    if (!email || !password || !firstName || !lastName) {
-      return res.status(400).json({ message: 'All fields (email, password, firstName, lastName) are required' });
+    if (!email || !password || !firstName) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
     // Check for existing user
@@ -57,7 +57,7 @@ export const register = async (req, res) => {
           <p>If you didn’t request this, ignore this email.</p>
         `,
       });
-      res.status(201).json({ message: 'User registered. Please verify your email with the OTP sent.' });
+      res.status(201).json({ message: 'User registered successfully.' });
     } catch (emailError) {
       console.error('Failed to send OTP email:', emailError);
       res.status(201).json({

@@ -1,8 +1,10 @@
 import React, {useState} from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const Signup = () => {
+
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -10,33 +12,53 @@ const Signup = () => {
         email: "",
         password: "",
       });
+      const [errors, setErrors] = useState({});
       const [loading, setLoading] = useState(false);
-      const [message, setMessage] = useState("");
-    
+      const [message, setMessage] = useState("");    
       // Handle input change
       const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+
+            // Remove errors on user input
+        setErrors({ ...errors, [e.target.name]: "" });
       };
+
+
+       // Validate form before submission
+  const validateForm = () => {
+    let newErrors = {};
+    if (!formData.firstName.trim()) newErrors.firstName = "First Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.password.trim()) newErrors.password = "Password is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+      
     
-      // Handle form submission
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setMessage("");
-    
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage(""); 
+
+    if (!validateForm()) return;
+
+    setLoading(true);
+      
         try {
           const response = await fetch("http://localhost:5000/api/auth/register", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(formData),
           });
-    
+      
           const data = await response.json();
-    
+      
           if (response.ok) {
-            setMessage("Signup successful! Please check your email for OTP verification.");
+            setMessage(data.message || "User registered successfully.");
+            localStorage.setItem("userEmail", formData.email);
+            setTimeout(() => {
+              navigate("/verify-otp", { state: { email: formData.email } });
+            }, 1500);
           } else {
             setMessage(data.message || "Signup failed. Please try again.");
           }
@@ -47,6 +69,9 @@ const Signup = () => {
           setLoading(false);
         }
       };
+      
+      
+      
 
 
   return (
@@ -55,6 +80,12 @@ const Signup = () => {
         <p>
           Welcome,<span>sign up to continue</span>
         </p>
+
+        {message && <div className="message">{message}</div>}
+
+
+
+        
         <button className="oauthButton">
           <svg className="icon" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -70,10 +101,20 @@ const Signup = () => {
           <span>OR</span>
           <div />
         </div>
+
+
         <input type="text" placeholder="First Name" name="firstName" value={formData.firstName} onChange={handleChange} required />
-        <input type="text" placeholder="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} required />
+        {errors.firstName && <span className="error">{errors.firstName}</span>}
+
+        <input type="text" placeholder="Last Name" name="lastName" value={formData.lastName} onChange={handleChange}  />
+
         <input type="email" placeholder="Email" name="email" value={formData.email} onChange={handleChange} required />
+        {errors.email && <span className="error">{errors.email}</span>}
+
         <input type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} required  />
+        {errors.password && <span className="error">{errors.password}</span>}
+
+
         <button type="submit" disabled={loading} className="oauthButton">
         {loading ? "Signing Up..." : "Signup"}
           <svg className="icon" xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5" /><path d="m13 17 5-5-5-5" /></svg>
