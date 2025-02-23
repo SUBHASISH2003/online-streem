@@ -5,13 +5,15 @@ import roomRoutes from './routes/metting.route.js';
 
 const app = express();
 
-// Middleware
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173", // Allow only your frontend
+    credentials: true, // Allow cookies/tokens to be sent
+  }));
 app.use(express.json());
 
 // Routes
 app.get('/', (req, res) => res.send('Video Conference Backend Running'));
 app.use('/api/auth', authRoutes);
-app.use('/api/room', roomRoutes);
+app.use('/api/meetings', roomRoutes);
 
 export default app;

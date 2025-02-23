@@ -1,15 +1,72 @@
-import React from "react";
-import {Link} from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const emailRef = useRef(null);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    emailRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Login failed");
+
+      // Store the token in sessionStorage
+      sessionStorage.setItem("token", data.token); // Assuming response has a token field
+      // Optionally store user data if needed
+      if (data.user) sessionStorage.setItem("user", JSON.stringify(data.user));
+
+      setSuccess("Login successful! Redirecting...");
+      setTimeout(() => navigate("/profile"), 2000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <StyledWrapper>
-      <form className="form">
+      <form className="form" onSubmit={handleLogin}>
         <p>
-          Welcome,<span>sign in to continue</span>
+          Welcome,<span> sign in to continue</span>
         </p>
-        <button className="oauthButton">
+        {error && <p className="message error">{error}</p>}
+        {success && <p className="message success">{success}</p>}
+
+        <button className="oauthButton" disabled={loading} aria-label="Continue with Google">
           <svg className="icon" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -19,24 +76,57 @@ const Login = () => {
           </svg>
           Continue with Google
         </button>
+
         <div className="separator">
           <div />
           <span>OR</span>
           <div />
         </div>
-        <input type="email" placeholder="Email" name="email" />
-        <input type="password" placeholder="Password" name="password" />
-        <button className="oauthButton">
-          Log In
-          <svg className="icon" xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="m6 17 5-5-5-5" /><path d="m13 17 5-5-5-5" /></svg>
+
+        <input
+          type="email"
+          ref={emailRef}
+          placeholder="Email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          autoComplete="email"
+          disabled={loading}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          autoComplete="current-password"
+          disabled={loading}
+        />
+
+        <button className="oauthButton" type="submit" disabled={loading} aria-label="Log in">
+          {loading ? (
+            <span className="spinner"></span>
+          ) : (
+            <>
+              Log In
+              <svg className="icon" xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 17 5-5-5-5" />
+                <path d="m13 17 5-5-5-5" />
+              </svg>
+            </>
+          )}
         </button>
+
         <p className="switchAuth">
-            Don't have an account? <Link to="/signup">Sign up</Link>
+          Don't have an account? <Link to="/signup">Sign up</Link>
         </p>
       </form>
     </StyledWrapper>
   );
 };
+
 
 const StyledWrapper = styled.div`
   display: flex;
